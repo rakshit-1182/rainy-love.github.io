@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Just For You 🌧️💖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+      transition: background 1s ease;
+    }
+
+    .bg-gif {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+
+    .rain {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .raindrop {
+      position: absolute;
+      width: 2px; height: 80px;
+      background: rgba(255, 255, 255, 0.3);
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(100vh); }
+    }
+
+    .card {
+      z-index: 5;
+      position: relative;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      transition: color 0.5s ease;
+    }
+
+    input, button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    button {
+      background-color: #ff6b81;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ff4757;
+    }
+
+    .lyrics {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -40%);
+    text-align: center;
+    font-size: 1.4rem;
+    color: #fff;
+    z-index: 4;
+    width: 90%;
+    line-height: 2.4rem;
+    max-height: 50%;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    }
+
+    .lyrics span {
+    display: block;
+    opacity: 0.3;
+    transition: opacity 0.4s ease, font-weight 0.4s ease, transform 0.4s ease;
+    }
+
+    .lyrics span.active {
+    opacity: 1;
+    font-weight: bold;
+    font-size: 1.6rem;
+    transform: scale(1.05);
+    }
+
+    .wait-msg {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 12px 20px;
+    border-radius: 14px;
+    display: none;
+    z-index: 10;
+    }
+    
+    @keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bg-gif" id="bgGif"></div>
+  <div class="rain" id="rain"></div>
+
+  <audio id="bgMusic" loop autoplay>
+    <source src="blue.mp3" type="audio/mpeg" />
+  </audio>
+
+  <div class="card" id="quiz-card">
+    <h2 id="question">Hey beautiful, what’s your favorite color? 🎨</h2>
+    <input type="text" id="answer" placeholder="Type your answer..." />
+    <br>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+
+  <div class="lyrics" id="lyrics" style="display:none;"></div>
+  <div class="wait-msg" id="waitMsg">Please wait 10 seconds...</div>
+
+  <script>
+    const rainContainer = document.getElementById('rain');
+    for (let i = 0; i < 100; i++) {
+      let drop = document.createElement('div');
+      drop.className = 'raindrop';
+      drop.style.left = Math.random() * 100 + 'vw';
+      drop.style.animationDuration = (Math.random() * 1.5 + 0.5) + 's';
+      drop.style.animationDelay = Math.random() * 5 + 's';
+      rainContainer.appendChild(drop);
+    }
+
+    const questions = [
+      "Hey beautiful, what’s your favorite color? 🎨",
+      "What’s your dream vacation spot? 🏖️",
+      "Which food always makes you smile? 🍰",
+      "A movie you can rewatch 100 times? 🎮",
+      "Something you’ve always wanted to do? 🎯",
+      "What cheers you up instantly? 😄",
+      "What song speaks to your soul? 🎶",
+      "What's one thing you want me to remember about you? 💌"
+    ];
+
+    const blueLyrics = `Your morning eyes, I could stare like watching stars\nI could walk you by, and I'll tell without a thought\nYou'd be mine, would you mind if I took your hand tonight?\nKnow you're all that I want this life\nI'll imagine we fell in love\nI'll nap under moonlight skies with you\nI think I'll picture us, you with the waves\nThe ocean's colors on your face\nI'll leave my heart with your air\nSo let me fly with you\nWill you be forever with me?\nMy love will always stay by you\nI'll keep it safe, so don't you worry a thing\nI'll tell you I love you more\nIt's stuck with you forever, so promise you won't let it go\nI'll trust the universe will always bring me to you\nI'll imagine we fell in love\nI'll nap under moonlight skies with you\nI think I'll picture us, you with the waves\nThe ocean's colors on your face\nI'll leave my heart with your air\nSo let me fly with you\nWill you be forever with me?`.split("\n");
+
+    const bgGif = document.getElementById('bgGif');
+    const lyricsDiv = document.getElementById('lyrics');
+    const waitMsg = document.getElementById('waitMsg');
+    let current = 0;
+    const answers = [];
+    let colorChosen = "white";
+    let musicStarted = false;
+
+    function isColor(strColor) {
+      const s = new Option().style;
+      s.color = strColor;
+      return s.color !== '';
+    }
+
+    function changeRainColor(color) {
+      document.querySelectorAll('.raindrop').forEach(drop => {
+        drop.style.background = color;
+      });
+    }
+
+    function animateLyrics(lines) {
+    document.getElementById("quiz-card").style.display = "none";
+    lyricsDiv.style.display = "flex";
+    waitMsg.style.display = "block";
+    waitMsg.innerText = "Please wait 20 seconds...";
+
+    lyricsDiv.innerHTML = lines.map(l => `<span>${l}</span>`).join("");
+
+    let i = 0;
+    const spans = lyricsDiv.querySelectorAll('span');
+    const interval = setInterval(() => {
+        spans.forEach(s => s.classList.remove("active"));
+        if (spans[i]) spans[i].classList.add("active");
+        i++;
+        if (i >= spans.length) clearInterval(interval);
+    }, 3000);
+
+    // Wait 20 seconds before showing next question
+    setTimeout(() => {
+        waitMsg.style.display = "none";
+        lyricsDiv.style.display = "none";
+        document.getElementById("quiz-card").style.display = "block";
+        document.getElementById("question").innerText = questions[++current];
+        document.getElementById("question").style.color = colorChosen;
+    }, 20000);
+    }
+
+
+    function nextQuestion() {
+    const input = document.getElementById('answer');
+    const value = input.value.trim();
+
+    if (!value) return alert("Type something first 😄");
+
+    answers.push(value);
+
+    if (!musicStarted) {
+        const music = document.getElementById("bgMusic");
+        music.play().catch(() => {});
+        musicStarted = true;
+    }
+
+    // Special handling for first question (color selection)
+    if (current === 0 && isColor(value.toLowerCase())) {
+        colorChosen = value.toLowerCase();
+        changeRainColor(colorChosen);
+        document.body.style.background = `linear-gradient(135deg, ${colorChosen}, #ffffff)`;
+        document.getElementById("question").style.color = colorChosen;
+
+        setTimeout(() => {
+        bgGif.style.backgroundImage = "url('pink-nature-landscape-with-vegetation.jpg')";
+        bgGif.style.opacity = 1;
+        changeRainColor("rgba(255,255,255,0.3)");
+        current++;
+        updateQuestion();
+        }, 2500);
+
+        input.value = "";
+        return;
+    }
+
+    // Update background images per question
+    if (current === 1) bgGif.style.backgroundImage = "url('3rdques.jpg')";
+    if (current === 2) bgGif.style.backgroundImage = "url('movie.jpg')";
+    if (current === 3) bgGif.style.backgroundImage = "url('5ques.jpg')";
+    if (current === 4) {
+        bgGif.style.opacity = 0;
+        document.body.style.background = "radial-gradient(circle at top left, #ffd1ff, #b8eaff, #ffc3a0)";
+    }
+    if (current === 5) {
+        bgGif.style.backgroundImage = "url('7ques.jpg')";
+        bgGif.style.opacity = 1;
+        animateLyrics(blueLyrics);
+        return;
+    }
+
+    current++;
+    input.value = "";
+
+    // If there are more questions, continue
+    if (current < questions.length) {
+        updateQuestion();
+    } else {
+        // Final message after all questions
+        document.getElementById("quiz-card").innerHTML = `
+        <h2 style="color: ${colorChosen};">✨ That was beautiful 💖</h2>
+        <p>Your answers made me smile. Click below to copy and send them ✨</p>
+        <button onclick="copyAnswers()">🗌 Copy My Answers</button>
+        `;
+        localStorage.setItem("her_answers", JSON.stringify(answers));
+    }
+    }
+
+    function updateQuestion() {
+  const questionEl = document.getElementById("question");
+  const inputEl = document.getElementById("answer");
+
+  questionEl.innerText = questions[current];
+  questionEl.style.color = colorChosen;
+
+  // Special styling for the last question (index 7)
+  if (current === questions.length - 1) {
+    bgGif.style.backgroundImage = "url('last.jpg')";
+    bgGif.style.opacity = 1;
+
+    inputEl.style.height = "120px";
+    inputEl.style.padding = "1rem";
+    inputEl.style.fontSize = "1.1rem";
+    inputEl.style.lineHeight = "1.6";
+    inputEl.style.resize = "none";
+    inputEl.style.animation = "fadeInUp 2s ease";
+
+    inputEl.setAttribute("placeholder", "Write the one thing you want me to always remember... 💌");
+  } else {
+    // Reset styles for non-final questions
+    inputEl.style.height = "";
+    inputEl.style.padding = "";
+    inputEl.style.fontSize = "";
+    inputEl.style.lineHeight = "";
+    inputEl.style.resize = "";
+    inputEl.style.animation = "";
+    inputEl.setAttribute("placeholder", "Type your answer...");
+  }
+}
+    function copyAnswers() {
+      const data = localStorage.getItem("her_answers");
+      navigator.clipboard.writeText(data).then(() => {
+        alert("Copied! Now send it to him 💌");
+      });
+    }
+  </script>
+</body>
+</html>
